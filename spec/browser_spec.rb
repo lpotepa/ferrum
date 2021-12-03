@@ -829,26 +829,22 @@ module Ferrum
       let(:file_path) { "#{PROJECT_ROOT}/spec/tmp/trace.json" }
 
       it "outputs a trace" do
-        browser.tracing.start(path: file_path)
-        browser.go_to("https://www.google.com")
-        browser.tracing.stop
+        browser.tracing.record(path: file_path) do
+          browser.go_to("https://www.google.com")
+        end
         expect(File.exist?(file_path)).to be(true)
       ensure
         FileUtils.rm_f(file_path)
       end
 
       it "runs with custom options" do
-        browser.tracing.start(
+        browser.tracing.record(
           path: file_path,
-          trace_params: {
-            traceConfig: {
-              includedCategories: ["disabled-by-default-devtools.timeline"],
-              excludedCategories: ["*"]
-            }
-          }
-        )
-        browser.go_to
-        browser.tracing.stop
+          included_categories: ["disabled-by-default-devtools.timeline"],
+          excluded_categories: ["*"]
+        ) do
+          browser.go_to
+        end
         expect(File.exist?(file_path)).to be(true)
         content = File.read(file_path)
         trace_config = JSON.parse(content)["metadata"]["trace-config"]
@@ -860,9 +856,9 @@ module Ferrum
       end
 
       it "runs with default categories" do
-        browser.tracing.start(path: file_path)
-        browser.go_to
-        browser.tracing.stop
+        browser.tracing.record(path: file_path) do
+          browser.go_to
+        end
         expect(File.exist?(file_path)).to be(true)
         content = File.read(file_path)
         trace_config = JSON.parse(content)["metadata"]["trace-config"]
@@ -886,51 +882,36 @@ module Ferrum
         FileUtils.rm_f(file_path)
       end
 
-      it "runs with default categories" do
-        browser.tracing.start(path: file_path)
-        browser.go_to
-        browser.tracing.stop
-        expect(File.exist?(file_path)).to be(true)
-        content = File.read(file_path)
-        trace_config = JSON.parse(content)["metadata"]["trace-config"]
-        expect(JSON.parse(trace_config)["excluded_categories"]).to eq(["*"])
-        expect(JSON.parse(content)["traceEvents"].any? { |object| object["cat"] == "toplevel" }).to eq(true)
-      ensure
-        FileUtils.rm_f(file_path)
-      end
-
       it "throws an exception if tracing on two pages" do
-        browser.tracing.start(path: file_path)
-        page = browser.create_page
-        expect { page.tracing.start(path: file_path) }.to raise_exception(Ferrum::BrowserError) do |e|
-          expect(e.message).to eq("Tracing has already been started (possibly in another tab).")
-        end
-      end
-
-      it "throws an exception if tracing is not started yet" do
-        expect { browser.tracing.stop }.to raise_exception(Ferrum::BrowserError) do |e|
-          expect(e.message).to eq("Tracing is not started")
+        browser.tracing.record(path: file_path) do
+          expect {
+            browser.tracing.record(path: file_path) do
+              browser.go_to
+            end
+          }.to raise_exception(Ferrum::BrowserError) do |e|
+            expect(e.message).to eq("Tracing has already been started (possibly in another tab).")
+          end
         end
       end
 
       specify "handles tracing.Complete event once" do
         file_path = "#{PROJECT_ROOT}/spec/tmp/trace.json"
-        browser.tracing.start(path: file_path)
-        browser.go_to
-        expect(Utils::Stream).to receive(:stream_to_file).with(kind_of(String), path: file_path).once.and_call_original
-        browser.tracing.stop
+        browser.tracing.record(path: file_path) do
+          browser.go_to
+          expect(Utils::Stream).to receive(:stream_to_file).with(kind_of(String), path: file_path).once.and_call_original
+        end
         expect(File.exist?(file_path)).to be(true)
         file_path2 = "#{PROJECT_ROOT}/spec/tmp/trace2.json"
-        browser.tracing.start(path: file_path2)
-        browser.go_to
-        expect(Utils::Stream).to receive(:stream_to_file).with(kind_of(String), path: file_path2).once.and_call_original
-        browser.tracing.stop
+        browser.tracing.record(path: file_path2) do
+          browser.go_to
+          expect(Utils::Stream).to receive(:stream_to_file).with(kind_of(String), path: file_path2).once.and_call_original
+        end
         expect(File.exist?(file_path2)).to be(true)
         file_path3 = "#{PROJECT_ROOT}/spec/tmp/trace3.json"
-        browser.tracing.start(path: file_path3)
-        browser.go_to
-        expect(Utils::Stream).to receive(:stream_to_file).with(kind_of(String), path: file_path3).once.and_call_original
-        browser.tracing.stop
+        browser.tracing.record(path: file_path3) do
+          browser.go_to
+          expect(Utils::Stream).to receive(:stream_to_file).with(kind_of(String), path: file_path3).once.and_call_original
+        end
         expect(File.exist?(file_path3)).to be(true)
       ensure
         FileUtils.rm_f(file_path)
@@ -939,27 +920,27 @@ module Ferrum
       end
 
       it "returns encoded 64 buffer" do
-        browser.tracing.start(encoding: :base64)
-        browser.go_to
-        trace = browser.tracing.stop
+        trace = browser.tracing.record(encoding: :base64) do
+          browser.go_to
+        end
         expect(File.exist?(file_path)).to be(false)
         decode64_trace = Base64.decode64(trace)
         expect(JSON.parse(decode64_trace)["traceEvents"].any?).to eq(true)
       end
 
       it "returns buffer with no encoding" do
-        browser.tracing.start
-        browser.go_to
-        trace = browser.tracing.stop
+        trace = browser.tracing.record do
+          browser.go_to
+        end
         expect(File.exist?(file_path)).to be(false)
         expect(JSON.parse(trace)["traceEvents"].any?).to eq(true)
       end
 
       context "screenshots enabled" do
         it "fills file with screenshot data" do
-          browser.tracing.start(path: file_path, screenshots: true)
-          browser.go_to("/ferrum/grid")
-          browser.tracing.stop
+          browser.tracing.record(path: file_path, screenshots: true) do
+            browser.go_to("/ferrum/grid")
+          end
           expect(File.exist?(file_path)).to be(true)
           content = JSON.parse(File.read(file_path))
           trace_events = content["traceEvents"]
@@ -971,9 +952,9 @@ module Ferrum
         end
 
         it "returns a buffer with screenshot data" do
-          browser.tracing.start(screenshots: true)
-          browser.go_to("/ferrum/grid")
-          trace = browser.tracing.stop
+          trace = browser.tracing.record(screenshots: true) do
+            browser.go_to("/ferrum/grid")
+          end
           expect(File.exist?(file_path)).to be(false)
           trace_config = JSON.parse(trace)["metadata"]["trace-config"]
           expect(JSON.parse(trace_config)["included_categories"]).to include("disabled-by-default-devtools.screenshot")
@@ -982,11 +963,13 @@ module Ferrum
       end
 
       it "fails with provided error on any errors in stream output" do
-        browser.tracing.start(path: file_path)
-        browser.go_to
         execute_error = StandardError.new("error message")
-        expect(browser.tracing).to receive(:stream).with(kind_of(String)).once.and_raise(execute_error)
-        expect { browser.tracing.stop }.to raise_exception(execute_error, "error message")
+        expect do
+          browser.tracing.record(path: file_path) do
+            browser.go_to
+            expect(browser.tracing).to receive(:stream).with(kind_of(String)).once.and_raise(execute_error)
+          end
+        end.to raise_exception(execute_error, "error message")
         expect(File.exist?(file_path)).to be(false)
       end
     end

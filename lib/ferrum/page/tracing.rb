@@ -24,18 +24,18 @@ module Ferrum
         self.client = client
       end
 
-      def start(trace_params: {}, **options)
+      def record(options = {}, &block)
         self.options = {
           screenshots: false,
           encoding: :binary,
+          included_categories: INCLUDED_CATEGORIES,
+          excluded_categories: EXCLUDED_CATEGORIES,
           **options
         }
         self.promise = Concurrent::Promises.resolvable_future
         subscribe_on_tracing_event
-        inner_start(trace_params)
-      end
-
-      def stop
+        start
+        block.call
         client.command("Tracing.end")
         promise.value!
       end
@@ -44,22 +44,21 @@ module Ferrum
 
       attr_accessor :client, :options, :promise
 
-      def inner_start(trace_params)
+      def start
         client.command(
           "Tracing.start",
           transferMode: "ReturnAsStream",
           traceConfig: {
             includedCategories: included_categories,
-            excludedCategories: EXCLUDED_CATEGORIES
+            excludedCategories: options[:excluded_categories]
           },
-          **trace_params
         )
       end
 
       def included_categories
-        included_categories = INCLUDED_CATEGORIES
+        included_categories = options[:included_categories]
         if options[:screenshots] == true
-          included_categories = INCLUDED_CATEGORIES | ["disabled-by-default-devtools.screenshot"]
+          included_categories = options[:included_categories] | ["disabled-by-default-devtools.screenshot"]
         end
         included_categories
       end
