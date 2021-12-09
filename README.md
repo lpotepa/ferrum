@@ -1105,29 +1105,45 @@ frame.at_css("//a[text() = 'Log in']") # => Node
 
 ## Tracing
 
-You can use `tracing.start` and `tracing.stop` to create a trace file which can be opened in Chrome DevTools or [timeline viewer](https://chromedevtools.github.io/timeline-viewer/).
+You can use `tracing.record` to create a trace file which can be opened in Chrome DevTools or [timeline viewer](https://chromedevtools.github.io/timeline-viewer/).
 
 ```ruby
-browser.tracing.start(path: "trace.json")
-browser.go_to("https://www.google.com");
-browser.tracing.stop
+browser.page.tracing.record(path: "trace.json") do
+  browser.go_to("https://www.google.com")
+end
 ```
 
-#### tracing.start(trace_params:, \*\*options) : `Hash` | `Hash`
+#### tracing.record(\*\*options) : `Hash`
 
-* trace_params `Hash` 
-  * Specify [Tracing.start PARAMETERS](https://chromedevtools.github.io/devtools-protocol/tot/Tracing/#method-start).
+- By default: returns Trace data from `Tracing.tracingComplete` event.
+- When `path` specified: return `true` and store Trace data from `Tracing.tracingComplete` event to file.
 
 * options `Hash`
   * `:path` (String) - `String` to save a Trace data output on the disk, not specified by default.
   * `:encoding` (Symbol) - `:base64` | `:binary` setting only for memory Trace data output, `:binary` by default.
   * `:screenshots` (Boolean) - When true - Captures screenshots in the trace, `false` by default.
+  * `:included_categories` (Array[String]) - An array of categories that be included to tracing data, by default:
+  ```ruby
+    ["devtools.timeline",
+    "v8.execute",
+    "disabled-by-default-devtools.timeline",
+    "disabled-by-default-devtools.timeline.frame",
+    "toplevel",
+    "blink.console",
+    "blink.user_timing",
+    "latencyInfo",
+    "disabled-by-default-devtools.timeline.stack",
+    "disabled-by-default-v8.cpu_profiler",
+    "disabled-by-default-v8.cpu_profiler.hires"]
+  ```
+  * `:excluded_categories` (Array[String]) - An array of categories that be excluded from tracing data, by default:
+  ```ruby
+    ["*"]
+  ```
+
+  See all categories by `browser.client.command("Tracing.getCategories")`
 
 Only one trace can be active at a time per browser.
-
-#### tracing.stop
-  - By default: returns Trace data from `Tracing.tracingComplete` event.
-  - When `path` specified: return `true` and store Trace data from `Tracing.tracingComplete` event to file.
 
 
 ## Thread safety ##
