@@ -829,7 +829,7 @@ module Ferrum
       let(:file_path) { "#{PROJECT_ROOT}/spec/tmp/trace.json" }
 
       it "outputs a trace" do
-        browser.tracing.record(path: file_path) do
+        browser.page.tracing.record(path: file_path) do
           browser.go_to("https://www.google.com")
         end
         expect(File.exist?(file_path)).to be(true)
@@ -838,7 +838,7 @@ module Ferrum
       end
 
       it "runs with custom options" do
-        browser.tracing.record(
+        browser.page.tracing.record(
           path: file_path,
           included_categories: ["disabled-by-default-devtools.timeline"],
           excluded_categories: ["*"]
@@ -856,7 +856,7 @@ module Ferrum
       end
 
       it "runs with default categories" do
-        browser.tracing.record(path: file_path) do
+        browser.page.tracing.record(path: file_path) do
           browser.go_to
         end
         expect(File.exist?(file_path)).to be(true)
@@ -883,9 +883,10 @@ module Ferrum
       end
 
       it "throws an exception if tracing on two pages" do
-        browser.tracing.record(path: file_path) do
+        page = browser.create_page
+        browser.page.tracing.record(path: file_path) do
           expect {
-            browser.tracing.record(path: file_path) do
+            page.tracing.record(path: file_path) do
               browser.go_to
             end
           }.to raise_exception(Ferrum::BrowserError) do |e|
@@ -896,19 +897,19 @@ module Ferrum
 
       specify "handles tracing.Complete event once" do
         file_path = "#{PROJECT_ROOT}/spec/tmp/trace.json"
-        browser.tracing.record(path: file_path) do
+        browser.page.tracing.record(path: file_path) do
           browser.go_to
           expect(Utils::Stream).to receive(:stream_to_file).with(kind_of(String), path: file_path).once.and_call_original
         end
         expect(File.exist?(file_path)).to be(true)
         file_path2 = "#{PROJECT_ROOT}/spec/tmp/trace2.json"
-        browser.tracing.record(path: file_path2) do
+        browser.page.tracing.record(path: file_path2) do
           browser.go_to
           expect(Utils::Stream).to receive(:stream_to_file).with(kind_of(String), path: file_path2).once.and_call_original
         end
         expect(File.exist?(file_path2)).to be(true)
         file_path3 = "#{PROJECT_ROOT}/spec/tmp/trace3.json"
-        browser.tracing.record(path: file_path3) do
+        browser.page.tracing.record(path: file_path3) do
           browser.go_to
           expect(Utils::Stream).to receive(:stream_to_file).with(kind_of(String), path: file_path3).once.and_call_original
         end
@@ -920,7 +921,7 @@ module Ferrum
       end
 
       it "returns encoded 64 buffer" do
-        trace = browser.tracing.record(encoding: :base64) do
+        trace = browser.page.tracing.record(encoding: :base64) do
           browser.go_to
         end
         expect(File.exist?(file_path)).to be(false)
@@ -929,7 +930,7 @@ module Ferrum
       end
 
       it "returns buffer with no encoding" do
-        trace = browser.tracing.record do
+        trace = browser.page.tracing.record do
           browser.go_to
         end
         expect(File.exist?(file_path)).to be(false)
@@ -938,7 +939,7 @@ module Ferrum
 
       context "screenshots enabled" do
         it "fills file with screenshot data" do
-          browser.tracing.record(path: file_path, screenshots: true) do
+          browser.page.tracing.record(path: file_path, screenshots: true) do
             browser.go_to("/ferrum/grid")
           end
           expect(File.exist?(file_path)).to be(true)
@@ -952,7 +953,7 @@ module Ferrum
         end
 
         it "returns a buffer with screenshot data" do
-          trace = browser.tracing.record(screenshots: true) do
+          trace = browser.page.tracing.record(screenshots: true) do
             browser.go_to("/ferrum/grid")
           end
           expect(File.exist?(file_path)).to be(false)
@@ -965,9 +966,9 @@ module Ferrum
       it "fails with provided error on any errors in stream output" do
         execute_error = StandardError.new("error message")
         expect do
-          browser.tracing.record(path: file_path) do
+          browser.page.tracing.record(path: file_path) do
             browser.go_to
-            expect(browser.tracing).to receive(:stream).with(kind_of(String)).once.and_raise(execute_error)
+            expect(browser.page.tracing).to receive(:stream).with(kind_of(String)).once.and_raise(execute_error)
           end
         end.to raise_exception(execute_error, "error message")
         expect(File.exist?(file_path)).to be(false)
