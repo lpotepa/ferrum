@@ -51,7 +51,7 @@ module Ferrum
           traceConfig: {
             includedCategories: included_categories,
             excludedCategories: options[:excluded_categories]
-          },
+          }
         )
       end
 
@@ -74,7 +74,9 @@ module Ferrum
       end
 
       def stream(handle)
-        Utils::Stream.for(client).fetch(handle, encoding: options[:encoding], path: options[:path])
+        Utils::Stream.fetch(encoding: options[:encoding], path: options[:path]) do |stream_chunk:|
+          client.command("IO.read", handle: handle, size: stream_chunk)
+        end
       end
     end
   end

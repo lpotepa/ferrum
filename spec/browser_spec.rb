@@ -885,11 +885,11 @@ module Ferrum
       it "throws an exception if tracing on two pages" do
         page = browser.create_page
         browser.page.tracing.record(path: file_path) do
-          expect {
+          expect do
             page.tracing.record(path: file_path) do
               browser.go_to
             end
-          }.to raise_exception(Ferrum::BrowserError) do |e|
+          end.to raise_exception(Ferrum::BrowserError) do |e|
             expect(e.message).to eq("Tracing has already been started (possibly in another tab).")
           end
         end
@@ -899,19 +899,19 @@ module Ferrum
         file_path = "#{PROJECT_ROOT}/spec/tmp/trace.json"
         browser.page.tracing.record(path: file_path) do
           browser.go_to
-          expect(Utils::Stream).to receive(:stream_to_file).with(kind_of(String), path: file_path).once.and_call_original
+          expect(Utils::Stream).to receive(:stream_to_file).with(path: file_path).once.and_call_original
         end
         expect(File.exist?(file_path)).to be(true)
         file_path2 = "#{PROJECT_ROOT}/spec/tmp/trace2.json"
         browser.page.tracing.record(path: file_path2) do
           browser.go_to
-          expect(Utils::Stream).to receive(:stream_to_file).with(kind_of(String), path: file_path2).once.and_call_original
+          expect(Utils::Stream).to receive(:stream_to_file).with(path: file_path2).once.and_call_original
         end
         expect(File.exist?(file_path2)).to be(true)
         file_path3 = "#{PROJECT_ROOT}/spec/tmp/trace3.json"
         browser.page.tracing.record(path: file_path3) do
           browser.go_to
-          expect(Utils::Stream).to receive(:stream_to_file).with(kind_of(String), path: file_path3).once.and_call_original
+          expect(Utils::Stream).to receive(:stream_to_file).with(path: file_path3).once.and_call_original
         end
         expect(File.exist?(file_path3)).to be(true)
       ensure
