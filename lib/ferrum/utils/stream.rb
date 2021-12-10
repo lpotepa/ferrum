@@ -3,6 +3,8 @@
 module Ferrum
   module Utils
     module Stream
+      STREAM_CHUNK = 128 * 1024
+
       module_function
 
       def fetch(path:, encoding:, &block)
@@ -26,7 +28,7 @@ module Ferrum
 
       def stream_to(output, &block)
         loop do
-          result = block.call(stream_chunk: 128 * 1024)
+          result = block.call
           data_chunk = result["data"]
           data_chunk = Base64.decode64(data_chunk) if result["base64Encoded"]
           output << data_chunk

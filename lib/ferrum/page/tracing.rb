@@ -74,8 +74,8 @@ module Ferrum
       end
 
       def stream(handle)
-        Utils::Stream.fetch(encoding: @options[:encoding], path: @options[:path]) do |stream_chunk:|
-          @client.command("IO.read", handle: handle, size: stream_chunk)
+        Utils::Stream.fetch(encoding: @options[:encoding], path: @options[:path]) do
+          @client.command("IO.read", handle: handle, size: Utils::Stream::STREAM_CHUNK)
         end
       end
     end
