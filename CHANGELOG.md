@@ -18,6 +18,18 @@ a block with this page, after which the page is closed.
 - `Ferrum::JavaScriptError#stack_trace` attr_reader
 - Windows support
 - Show warning and accept dialog if no handler given
+- `Ferrum::Page#tracing` - instance of `Ferrum::Page::Tracing` with passed client for page object instance.
+- `Ferrum::Page::Tracing` class implementation:
+  - initializer accepts one argument:
+    - `client` - instance of passed `Ferrum::Browser::Client`.
+  - `INCLUDED_CATEGORIES` an array of categories that be included to tracing data.
+  - `EXCLUDED_CATEGORIES` an array of categories that be excluded from tracing data.
+  - `#record` - method that start/stop tracing for steps provided in passed block.
+    - options:
+      -  screenshots: false
+      -  encoding: :binary
+      -  included_categories: INCLUDED_CATEGORIES
+      -  excluded_categories: EXCLUDED_CATEGORIES
 
 ### Changed
 
