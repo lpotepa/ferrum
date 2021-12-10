@@ -20,62 +20,62 @@ module Ferrum
         *
       ].freeze
 
+      attr_reader :client, :options, :promise
+
       def initialize(client:)
-        self.client = client
+        @client = client
       end
 
       def record(options = {}, &block)
-        self.options = {
+        @options = {
           screenshots: false,
           encoding: :binary,
           included_categories: INCLUDED_CATEGORIES,
           excluded_categories: EXCLUDED_CATEGORIES,
           **options
         }
-        self.promise = Concurrent::Promises.resolvable_future
+        @promise = Concurrent::Promises.resolvable_future
         subscribe_on_tracing_event
         start
         block.call
-        client.command("Tracing.end")
-        promise.value!
+        @client.command("Tracing.end")
+        @promise.value!
       end
 
       private
 
-      attr_accessor :client, :options, :promise
-
       def start
-        client.command(
+        @client.command(
           "Tracing.start",
           transferMode: "ReturnAsStream",
           traceConfig: {
             includedCategories: included_categories,
-            excludedCategories: options[:excluded_categories]
+            excludedCategories: @options[:excluded_categories]
           }
         )
       end
 
       def included_categories
-        included_categories = options[:included_categories]
-        if options[:screenshots] == true
-          included_categories = options[:included_categories] | ["disabled-by-default-devtools.screenshot"]
+        included_categories = @options[:included_categories]
+        if @options[:screenshots] == true
+          included_categories = @options[:included_categories] | ["disabled-by-default-devtools.screenshot"]
         end
         included_categories
       end
 
       def subscribe_on_tracing_event
-        client.on("Tracing.tracingComplete") do |event, index|
+        @client.on("Tracing.tracingComplete") do |event, index|
           next if index.to_i != 0
 
-          promise.fulfill(stream(event.fetch("stream")))
+          @promise.fulfill(stream(event.fetch("stream")))
         rescue StandardError => e
-          promise.reject(e)
+          @promise.reject(e)
         end
       end
 
       def stream(handle)
-        Utils::Stream.fetch(encoding: options[:encoding], path: options[:path]) do |stream_chunk:|
-          client.command("IO.read", handle: handle, size: stream_chunk)
+        Utils::Stream.fetch(encoding: @options[:encoding], path: @options[:path]) do |stream_chunk:|
+          @client.command("IO.read", handle: handle, size: stream_chunk)
         end
       end
     end
