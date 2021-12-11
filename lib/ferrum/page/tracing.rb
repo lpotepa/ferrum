@@ -20,8 +20,6 @@ module Ferrum
         *
       ].freeze
 
-      attr_reader :client, :options, :promise
-
       def initialize(client:)
         @client = client
       end
