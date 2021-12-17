@@ -973,6 +973,14 @@ module Ferrum
         end.to raise_exception(execute_error, "error message")
         expect(File.exist?(file_path)).to be(false)
       end
+
+      it "waits for promise fill with timeout when it provided" do
+        expect(browser.page.tracing).to receive(:subscribe_on_tracing_event).with(no_args)
+        trace = browser.page.tracing.record(timeout: 1) do
+          browser.go_to
+        end
+        expect(trace).to be_nil
+      end
     end
   end
 end

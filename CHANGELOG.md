@@ -26,6 +26,7 @@ a block with this page, after which the page is closed.
   - `EXCLUDED_CATEGORIES` an array of categories that be excluded from tracing data.
   - `#record` - method that start/stop tracing for steps provided in passed block.
     - options:
+      -  timeout: nil
       -  screenshots: false
       -  encoding: :binary
       -  included_categories: INCLUDED_CATEGORIES

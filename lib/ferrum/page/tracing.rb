@@ -26,6 +26,7 @@ module Ferrum
 
       def record(options = {}, &block)
         @options = {
+          timeout: nil,
           screenshots: false,
           encoding: :binary,
           included_categories: INCLUDED_CATEGORIES,
@@ -37,7 +38,7 @@ module Ferrum
         start
         block.call
         @client.command("Tracing.end")
-        @promise.value!
+        @promise.value!(@options[:timeout])
       end
 
       private

@@ -1121,6 +1121,7 @@ end
 * options `Hash`
   * `:path` (String) - `String` to save a Trace data output on the disk, not specified by default.
   * `:encoding` (Symbol) - `:base64` | `:binary` setting only for memory Trace data output, `:binary` by default.
+  * `:timeout` (Integer) - [Timeout of promise](https://github.com/ruby-concurrency/concurrent-ruby/blob/52c08fca13cc3811673ea2f6fdb244a0e42e0ebe/lib/concurrent-ruby/concurrent/promises.rb#L986) to wait til event `Tracing.Complete` triggered that fills buffer/file, `nil` by default, means "wait forever".
   * `:screenshots` (Boolean) - When true - Captures screenshots in the trace, `false` by default.
   * `:included_categories` (Array[String]) - An array of categories that be included to tracing data, by default:
   ```ruby
