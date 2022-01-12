@@ -193,6 +193,19 @@ module Ferrum
             .to eq([""])
         end
       end
+
+      it "picks option in frame" do
+        browser.execute <<-JS
+          document.body.innerHTML += "<iframe src='about:blank' name='frame'>";
+          var iframeDocument = document.querySelector("iframe[name='frame']").contentWindow.document;
+          var content = "<html><body><select id='select'><option>One</option></select></body></html>";
+          iframeDocument.open("text/html", "replace");
+          iframeDocument.write(content);
+          iframeDocument.close();
+        JS
+        frame = browser.at_xpath("//iframe[@name='frame']").frame
+        expect(frame.at_xpath("//*[@id='select']").select("One", by: :text).selected.map(&:text)).to eq(["One"])
+      end
     end
 
     context "when the element is not in the viewport" do
