@@ -42,8 +42,8 @@ module Ferrum
         path, encoding = common_options(**opts)
         options = pdf_options(**opts).merge(transferMode: "ReturnAsStream")
         handle = command("Page.printToPDF", **options).fetch("stream")
-        Utils::Stream.fetch(encoding: encoding, path: path) do
-          command("IO.read", handle: handle, size: Utils::Stream::STREAM_CHUNK)
+        Utils::Stream.fetch(encoding: encoding, path: path) do |read_stream|
+          read_stream.call(client: self, handle: handle)
         end
       end
 

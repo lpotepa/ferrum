@@ -28,7 +28,10 @@ module Ferrum
 
       def stream_to(output, &block)
         loop do
-          result = block.call
+          read_stream = lambda do |client:, handle:|
+            client.command("IO.read", handle: handle, size: STREAM_CHUNK)
+          end
+          result = block.call(read_stream)
           data_chunk = result["data"]
           data_chunk = Base64.decode64(data_chunk) if result["base64Encoded"]
           output << data_chunk
