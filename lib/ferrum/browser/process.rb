@@ -64,11 +64,11 @@ module Ferrum
       def initialize(options)
         @pid = @xvfb = @user_data_dir = nil
 
-        if options[:url]
-          self.ws_url = options[:url]
-          # parse_browser_versions
-          return
-        end
+#         if options[:url]
+#           self.ws_url = options[:url]
+#           # parse_browser_versions
+#           return
+#         end
 
         @logger = options[:logger]
         @process_timeout = options.fetch(:process_timeout, PROCESS_TIMEOUT)
