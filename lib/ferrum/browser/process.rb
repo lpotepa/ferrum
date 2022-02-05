@@ -65,7 +65,8 @@ module Ferrum
         @pid = @xvfb = @user_data_dir = nil
 
         if options[:url]
-          url = URI.join(options[:url].to_s, "/json/version")
+          uri = URI.parse(options[:url].to_s])
+          url = URI.join(options[:url].to_s, "/json/version", "?#{uri.query}")
           response = JSON.parse(::Net::HTTP.get(url))
           self.ws_url = response["webSocketDebuggerUrl"]
           parse_browser_versions
