@@ -66,7 +66,7 @@ module Ferrum
 
         if options[:url]
           self.ws_url = options[:url]
-          parse_browser_versions
+          # parse_browser_versions
           return
         end
 
@@ -98,7 +98,7 @@ module Ferrum
           ObjectSpace.define_finalizer(self, self.class.process_killer(@pid))
 
           parse_ws_url(read_io, @process_timeout)
-          parse_browser_versions
+          # parse_browser_versions
         ensure
           close_io(read_io, write_io)
         end
