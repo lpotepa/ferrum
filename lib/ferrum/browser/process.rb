@@ -167,7 +167,7 @@ module Ferrum
       def parse_browser_versions
         return unless ws_url.is_a?(Addressable::URI)
 
-        version_url = URI.parse(ws_url.merge(scheme: "http", path: "/json/version"))
+        version_url = URI.parse(ws_url.merge(scheme: "https", path: "/json/version"))
         response = JSON.parse(::Net::HTTP.get(version_url))
 
         @v8_version = response["V8-Version"]
